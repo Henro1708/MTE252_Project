@@ -1,5 +1,6 @@
-filename = 'Input Samples/Conversation Regular voice street.m4a';
+filename = 'Input_mp3/Words regular voice street.mp3';
 
 [y,Fs] = audioread(filename);
+plot(y);
+soundsc(y,Fs);
 
-disp(y)
