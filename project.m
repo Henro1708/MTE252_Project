@@ -1,3 +1,6 @@
+clc
+clear
+
 function [mono,n_out] = stereo_to_mono(stereo)
     % Translate file from stereo to mono
     % Input: Stereo -> audio matrix in a nx2
@@ -64,6 +67,3 @@ for i = 1:n_of_files
     filenames(i)
     main_audio(filenames(i))
 end
-
-
-
