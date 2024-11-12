@@ -67,6 +67,49 @@ function play_and_plot_cos(n, Fs, figure_num)
     soundsc(cos_s, Fs);
 end
 
+function audio_out = bandpass(audio_in, f_1, f_2)
+    % Translate file from stereo to mono
+    % Input: audio_in -> audio input
+    %        f_1 -> low frequency pass
+    %        f_2 -> high frequency pass
+    % Output: audio_out -> audio after filter
+
+    % All frequency values are in Hz.
+    Fs = 16000;  % Sampling Frequency
+    
+    N   = 40;  % Order
+    Fc1 = f_1;   % First Cutoff Frequency
+    Fc2 = f_2;   % Second Cutoff Frequency
+    
+    % Construct an FDESIGN object and call its BUTTER method.
+    h  = fdesign.bandpass('N,F3dB1,F3dB2', N, Fc1, Fc2, Fs);
+    Hd = design(h, 'butter');
+    
+    audio_out = filter(Hd, audio_in);
+
+end
+
+function audio_out2 = lowpass(audio_in)
+    % Translate file from stereo to mono
+    % Input: audio_in -> audio input
+    %        f_1 -> low frequency pass
+    %        f_2 -> high frequency pass
+    % Output: audio_out -> audio after filter
+
+    % All frequency values are in Hz.
+    Fs = 16000;  % Sampling Frequency
+
+    N  = 40;   % Order
+    Fc = 400;  % Cutoff Frequency
+
+    % Construct an FDESIGN object and call its BUTTER method.
+    h  = fdesign.lowpass('N,F3dB', N, Fc, Fs);
+    Hd = design(h, 'butter');
+
+    audio_out2 = filter(Hd, audio_in);
+
+end
+
 function output_sig = process_audio(filename, boundary_arr)
     % Read in audio file
     [y, Fs] = audioread(filename);
@@ -103,19 +146,22 @@ function output_sig = process_audio(filename, boundary_arr)
     for ind = 1:num_bands
         % for every bandpass
         % filter the signal in the band
-        band_filtered_sig = bandpass(audio, boundary_arr(ind), boundary_arr(ind+1));
+        band_filtered_sig = bandpass(audio,boundary_arr(ind), boundary_arr(ind+1));
         
         % rectify and run through lowpass
         abs_sig = abs(band_filtered_sig);
-        lowpass_filtered_sig = lowpass(abs_sig);
-        output_arr(ind,:) = lowpass_filtered_sig;
+
+
+        output_arr(ind,:) = audio_out;
+        % plot
+        figure(ind);
+        plot(audio_out);
+        hold on;
+
+        % lowpass filter
 
     end
-    % plot
-    figure(1);
-    plot(output_arr(1,:));
-    disp(output_arr(1,:));
-    hold on;
+    
 end
 
 % Get an array of frequency boundaries that will be used to bounds in the
@@ -123,7 +169,7 @@ end
 
 % start and end frequencies
 f_start = 100;
-f_end = 7999;
+f_end = 8000;
 
 % number of bands to be evenly spaced
 n = 20;
