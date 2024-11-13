@@ -99,23 +99,82 @@ function output_sig = process_audio(filename, boundary_arr)
 
     % Phase 2
     num_bands = length(boundary_arr)-1;
-    output_arr = zeros([num_bands,n]);
+    band_filtered_arr = zeros([num_bands,n]);
+    enveloped_arr = zeros([num_bands,n]);
     for ind = 1:num_bands
         % for every bandpass
         % filter the signal in the band
         band_filtered_sig = bandpass(audio, boundary_arr(ind), boundary_arr(ind+1));
+        band_filtered_arr(ind,:) = band_filtered_sig;
         
-        % rectify and run through lowpass
+        % envelope extraction
         abs_sig = abs(band_filtered_sig);
         lowpass_filtered_sig = lowpass(abs_sig);
-        output_arr(ind,:) = lowpass_filtered_sig;
-
+        enveloped_arr(ind,:) = lowpass_filtered_sig;
     end
-    % plot
+    
+    % % separate plots
+    % % plot first and last passband filtered signals
+    % figure(1);
+    % plot(band_filtered_arr(1,:));
+    % title("First Passband Signal");
+    % xlabel("Sample Number");
+    % ylabel("Amplitude");
+    % hold on;
+    % 
+    % figure(2);
+    % plot(band_filtered_arr(end,:));
+    % title("Last Passband Signal");
+    % xlabel("Sample Number");
+    % ylabel("Amplitude");
+    % hold on;
+    % 
+    % % plot envelopes of first and last passbands
+    % figure(3);
+    % plot(enveloped_arr(1,:));
+    % title("First Passband Signal Envelope");
+    % xlabel("Sample Number");
+    % ylabel("Amplitude");
+    % hold on;
+    % 
+    % figure(4);
+    % plot(enveloped_arr(end,:));
+    % title("Last Passband Signal Envelope");
+    % xlabel("Sample Number");
+    % ylabel("Amplitude");
+    % hold on;
+
+    % combined plots
+    % first passband signal
     figure(1);
-    plot(output_arr(1,:));
-    disp(output_arr(1,:));
+    subplot(2,1,1);
+    plot(band_filtered_arr(1,:));
+    title("First Passband Signal");
+    xlabel("Sample Number");
+    ylabel("Amplitude");
+    % enveloped
+    subplot(2,1,2);
+    plot(enveloped_arr(1,:));
+    title("First Passband Signal Envelope");
+    xlabel("Sample Number");
+    ylabel("Amplitude");
     hold on;
+    
+    % last passband signal
+    figure(2);
+    subplot(2,1,1);
+    plot(band_filtered_arr(end,:));
+    title("Last Passband Signal");
+    xlabel("Sample Number");
+    ylabel("Amplitude");
+    % enveloped
+    subplot(2,1,2);
+    plot(enveloped_arr(end,:));
+    title("Last Passband Signal Envelope");
+    xlabel("Sample Number");
+    ylabel("Amplitude");
+    hold on;
+
 end
 
 % Get an array of frequency boundaries that will be used to bounds in the
@@ -137,7 +196,6 @@ log_boundaries = linspace(log_start, log_end, n+1);
 
 % get frequency values of boundaries
 boundary_arr = 10 .^ log_boundaries;
-
 
 % % Process all files
 % % array of input file names
