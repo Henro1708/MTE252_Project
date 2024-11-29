@@ -1,8 +1,113 @@
-clc
-clear
+clc;
+clear;
 
-% adds input data folder path to MATLAB
+% add input data folder path to MATLAB
 addpath("Input_mp3\")
+
+% -------------------------------------------------------------------------
+% Parameters
+% -------------------------------------------------------------------------
+% resampling frequency
+desired_Fs = 16000;
+
+% number of bands
+n = 20;
+
+% start and end frequencies
+f_start = 100;
+f_end = 7999;
+
+iteration_str = "v1"; % appended to output filenames to help keep track of design version
+
+% array of input file names
+filenames = ["Input_mp3/Conversation low voice street.mp3", ...
+             "Input_mp3/Conversation regular voice street.mp3", ...
+             "Input_mp3/Convo high voice quiet.mp3", ...
+             "Input_mp3/Convo low voice quiet.mp3", ...
+             "Input_mp3/Convo regular voice quiet.mp3", ...
+             "Input_mp3/Convo reg voice conversation.mp3", ...
+             "Input_mp3/Words high voice quiet.mp3", ...
+             "Input_mp3/Words high voice street.mp3", ...
+             "Input_mp3/Words low voice street.mp3", ...
+             "Input_mp3/Words low voice quiet.mp3", ...
+             "Input_mp3/Words regular voice street.mp3", ...
+             "Input_mp3/Words reg voice conversation.mp3", ...
+             "Input_mp3/Words reg voice quiet.mp3"];
+num_files = length(filenames);
+
+% file_process_range = 1:1; % change this to change how many files are processed
+file_process_range = 1:num_files; % process all files
+
+% -------------------------------------------------------------------------
+
+% -------------------------------------------------------------------------
+% Main
+% -------------------------------------------------------------------------
+
+% calculate log of bounds
+log_start = log10(f_start);
+log_end = log10(f_end);
+
+% calculate boundaries in log space with even spacing
+log_boundaries = linspace(log_start, log_end, n+1);
+
+% calculate central frequencies
+log_central_freqs = zeros(1,n);
+log_band_width = (log_end - log_start) ./ n;
+for i = 1:n
+    log_central_freqs(i) = log_start + log_band_width ./ 2 + (i-1) .* log_band_width;
+end
+
+% convert boundaries and central frequencies back to frequency domain
+boundary_arr = 10 .^ log_boundaries;
+central_freq_arr = 10 .^ log_central_freqs;
+
+% Process files specified in the process range
+for index = file_process_range
+    signal_out = process_audio(filenames(index), boundary_arr, central_freq_arr, desired_Fs); % call processing function
+    save_audio(filenames(index), iteration_str, signal_out, desired_Fs); % save to output folder
+    % soundsc(signal_out, desired_Fs); % play output to speakers
+end
+
+% -------------------------------------------------------------------------
+
+% -------------------------------------------------------------------------
+% Function Definitions
+% -------------------------------------------------------------------------
+function output_sig = process_audio(filename, boundary_arr, central_freq_arr, desired_Fs)
+    % Read in audio file
+    [y, Fs] = audioread(filename);
+
+    % Convert from stereo to mono
+    [audio, ] = stereo_to_mono(y);
+    
+    % Resample audio
+    audio = resample(audio, desired_Fs, Fs);
+    n = length(audio);
+  
+    % Rectify Signal
+    num_bands = length(boundary_arr)-1;
+    band_filtered_arr = zeros([num_bands,n]);
+    am_sigs = zeros([num_bands, n]);
+    output_sig = zeros([n,1]);
+    for ind = 1:num_bands
+        % for every bandpass
+        % filter the signal in the band
+        band_filtered_sig = bandpass(audio, boundary_arr(ind), boundary_arr(ind+1));
+        band_filtered_arr(ind,:) = band_filtered_sig;
+        
+        % envelope extraction
+        abs_sig = abs(band_filtered_sig);
+        lowpass_filtered_sig = lowpass(abs_sig);
+
+        % modulate with central frequency
+        t = (0:n-1) / desired_Fs;
+        cos_sig = cos(2*pi*central_freq_arr(ind)*t);
+        cos_sig = cos_sig.'; % transpose so cos can be multiplied with rectified signal
+        am_sigs(ind,:) = lowpass_filtered_sig .* cos_sig;
+        output_sig = output_sig + am_sigs(ind,:)';
+    end
+end
 
 function [mono, n_out] = stereo_to_mono(stereo)
     % Translate file from stereo to mono
@@ -17,7 +122,7 @@ function [mono, n_out] = stereo_to_mono(stereo)
     mono = stereo;
 end
 
-function save_audio(full_name, audio, Fs)
+function save_audio(full_name, iteration_str, audio, Fs)
     % Save audio data to file
     % Input:
     % full_name - full name of original audio file (includes parent folder)
@@ -25,7 +130,7 @@ function save_audio(full_name, audio, Fs)
     % Fs - sampling frequency
     
     % define save folder
-    save_folder = 'Resampled_files/';
+    save_folder = 'Output_mp3/';
     
     % split original save folder name and file name 
     full_name_split = split(full_name, '/');
@@ -33,192 +138,12 @@ function save_audio(full_name, audio, Fs)
     % isolated file name
     file_name = full_name_split(length(full_name_split));
 
+    % split file type from file name
+    file_type_split = split(file_name, ".");
+
     % append folder name with file name
-    final_name = strcat(save_folder, file_name);
+    final_name = strcat(save_folder, file_type_split(1), "_", iteration_str, ".", file_type_split(2));
 
     % write to file
     audiowrite(final_name, audio, Fs);
 end
-
-function play_and_plot_cos(n, Fs, figure_num)
-    % Plays a 1 kHz cosine wave and then plots it as a function of time
-    % over 2 cycles
-    % Input:
-    % n - number of samples
-    % Fs - sampling frequency
-    cos_freq = 1000; % in Hz
-    
-    % Cosine as a function of sample number
-    s = 0:1:n;
-    cos_s = cos(2 * pi * cos_freq / Fs * s); % cosine as a function of sample number
-    
-    % Cosine as a function of sample time
-    t = (0:n-1) / Fs;
-    cos_t = cos(2 * pi * cos_freq * t); % cosine as a function of time
-    
-    % Plot cosine function as a function of time
-    figure(abs(figure_num+1));
-    plot(t,cos_t);
-    xlabel('Time (s)');
-    xlim([0, 0.002])
-    ylabel('Amplitude');
-    title('Plot of 1kHz Cosine Wave');
-    hold on;
-    soundsc(cos_s, Fs);
-end
-
-function output_sig = process_audio(filename, boundary_arr)
-    % Read in audio file
-    [y, Fs] = audioread(filename);
-
-    % Convert from stereo to mono
-    [audio, n] = stereo_to_mono(y);
-    
-    % Resample audio to 16000 kHz
-    desired_Fs = 16000;
-    audio = resample(audio, desired_Fs, Fs);
-    n = length(audio);
-    
-    % Phase 1
-    % % Save audio to file
-    % save_audio(filename, audio, desired_Fs);
-    
-    % % Play audio file
-    % soundsc(audio, desired_Fs);
-
-    % % Plot audio waveform as a function of sample number
-    % figure(abs(figure_num));
-    % plot(audio);
-    % xlabel('Sample Number')
-    % ylabel('Amplitude')
-    % title('Plot of Recording Resampled to 16kHz')
-    % hold on;
-
-    % % Plot and play cosine function
-    % play_and_plot_cos(n, desired_Fs, figure_num)
-
-    % Phase 2
-    num_bands = length(boundary_arr)-1;
-    band_filtered_arr = zeros([num_bands,n]);
-    enveloped_arr = zeros([num_bands,n]);
-    for ind = 1:num_bands
-        % for every bandpass
-        % filter the signal in the band
-        band_filtered_sig = bandpass(audio, boundary_arr(ind), boundary_arr(ind+1));
-        band_filtered_arr(ind,:) = band_filtered_sig;
-        
-        % envelope extraction
-        abs_sig = abs(band_filtered_sig);
-        lowpass_filtered_sig = lowpass(abs_sig);
-        enveloped_arr(ind,:) = lowpass_filtered_sig;
-    end
-    
-    % % separate plots
-    % % plot first and last passband filtered signals
-    % figure(1);
-    % plot(band_filtered_arr(1,:));
-    % title("First Passband Signal");
-    % xlabel("Sample Number");
-    % ylabel("Amplitude");
-    % hold on;
-    % 
-    % figure(2);
-    % plot(band_filtered_arr(end,:));
-    % title("Last Passband Signal");
-    % xlabel("Sample Number");
-    % ylabel("Amplitude");
-    % hold on;
-    % 
-    % % plot envelopes of first and last passbands
-    % figure(3);
-    % plot(enveloped_arr(1,:));
-    % title("First Passband Signal Envelope");
-    % xlabel("Sample Number");
-    % ylabel("Amplitude");
-    % hold on;
-    % 
-    % figure(4);
-    % plot(enveloped_arr(end,:));
-    % title("Last Passband Signal Envelope");
-    % xlabel("Sample Number");
-    % ylabel("Amplitude");
-    % hold on;
-
-    % combined plots
-    % first passband signal
-    figure(1);
-    subplot(2,1,1);
-    plot(band_filtered_arr(1,:));
-    title("First Passband Signal");
-    xlabel("Sample Number");
-    ylabel("Amplitude");
-    % enveloped
-    subplot(2,1,2);
-    plot(enveloped_arr(1,:));
-    title("First Passband Signal Envelope");
-    xlabel("Sample Number");
-    ylabel("Amplitude");
-    hold on;
-    
-    % last passband signal
-    figure(2);
-    subplot(2,1,1);
-    plot(band_filtered_arr(end,:));
-    title("Last Passband Signal");
-    xlabel("Sample Number");
-    ylabel("Amplitude");
-    % enveloped
-    subplot(2,1,2);
-    plot(enveloped_arr(end,:));
-    title("Last Passband Signal Envelope");
-    xlabel("Sample Number");
-    ylabel("Amplitude");
-    hold on;
-
-end
-
-% Get an array of frequency boundaries that will be used to bounds in the
-% bandpass filters
-
-% start and end frequencies
-f_start = 100;
-f_end = 7999;
-
-% number of bands to be evenly spaced
-n = 20;
-
-% get log of bounds
-log_start = log10(f_start);
-log_end = log10(f_end);
-
-% calculate boundaries in log space with even spacing
-log_boundaries = linspace(log_start, log_end, n+1);
-
-% get frequency values of boundaries
-boundary_arr = 10 .^ log_boundaries;
-
-% % Process all files
-% % array of input file names
-% filenames = ["Input_mp3/Conversation low voice street.mp3", ...
-%              "Input_mp3/Conversation regular voice street.mp3", ...
-%              "Input_mp3/Convo high voice quiet.mp3", ...
-%              "Input_mp3/Convo low voice quiet.mp3", ...
-%              "Input_mp3/Convo regular voice quiet.mp3", ...
-%              "Input_mp3/Convo reg voice conversation.mp3", ...
-%              "Input_mp3/Words high voice quiet.mp3", ...
-%              "Input_mp3/Words high voice street.mp3", ...
-%              "Input_mp3/Words low voice street.mp3", ...
-%              "Input_mp3/Words low voice quiet.mp3", ...
-%              "Input_mp3/Words regular voice street.mp3", ...
-%              "Input_mp3/Words reg voice conversation.mp3", ...
-%              "Input_mp3/Words reg voice quiet.mp3"];
-% num_files = length(filenames);
-% figure_num = 1;
-% for i = 1:num_files
-%     process_audio(filenames(i), figure_num);
-%     figure_num = figure_num + 2;
-% end
-
-% Process one file
-process_audio("Input_mp3/Conversation low voice street.mp3", boundary_arr);
-
