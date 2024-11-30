@@ -11,13 +11,13 @@ addpath("Input_mp3\")
 desired_Fs = 16000;
 
 % number of bands
-n = 100;
+n = 20;
 
 % start and end frequencies
 f_start = 100;
 f_end = 7999;
 
-iteration_str = "v1"; % appended to output filenames to help keep track of design version
+iteration_str = "1"; % appended to output filenames to help keep track of design version
 
 % array of input file names
 filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
@@ -35,8 +35,8 @@ filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
              "Input_mp3/Words reg voice quiet.mp3"];
 num_files = length(filenames);
 
-file_process_range = 1:4; % change this to change how many files are processed
-% file_process_range = 1:num_files; % process all files
+% file_process_range = 1:4; % change this to change how many files are processed
+file_process_range = 1:num_files; % process all files
 
 % -------------------------------------------------------------------------
 
@@ -130,7 +130,7 @@ function save_audio(full_name, iteration_str, audio, Fs)
     % Fs - sampling frequency
     
     % define save folder
-    save_folder = 'Output_mp3/Output_2/';
+    save_folder = 'Output_mp3/';
     
     % split original save folder name and file name 
     full_name_split = split(full_name, '/');
