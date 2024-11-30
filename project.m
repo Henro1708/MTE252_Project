@@ -11,13 +11,13 @@ addpath("Input_mp3\")
 desired_Fs = 16000;
 
 % number of bands
-n = 25;
+n = 20;
 
 % start and end frequencies
 f_start = 100;
 f_end = 7999;
 
-iteration_str = "B25"; % appended to output filenames to help keep track of design version
+iteration_str = "LPW350"; % appended to output filenames to help keep track of design version
 
 % array of input file names
 filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
