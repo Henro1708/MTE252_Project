@@ -38,7 +38,7 @@ filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
              "Input_mp3/Words reg voice quiet.mp3"];
 num_files = length(filenames);
 
-file_process_range = 1:4; % change this to change how many files are processed
+file_process_range = 1:1; % change this to change how many files are processed
 % file_process_range = 1:num_files; % process all files
 
 % -------------------------------------------------------------------------
@@ -67,9 +67,9 @@ central_freq_arr = 10 .^ log_central_freqs;
 
 % Process files specified in the process range
 for index = file_process_range
-    signal_out = process_audio(filenames(index), boundary_arr, central_freq_arr, desired_Fs); % call processing function
-    save_audio(filenames(index), iteration_str, signal_out, desired_Fs); % save to output folder
-    % soundsc(signal_out, desired_Fs); % play output to speakers
+    signal_out = process_audio(filenames(index), boundary_arr, central_freq_arr, desired_Fs, band_gains); % call processing function
+    % save_audio(filenames(index), iteration_str, signal_out, desired_Fs); % save to output folder
+    soundsc(signal_out(1:100000), desired_Fs); % play output to speakers
 end
 
 % -------------------------------------------------------------------------
@@ -107,7 +107,7 @@ function output_sig = process_audio(filename, boundary_arr, central_freq_arr, de
         t = (0:n-1) / desired_Fs;
         cos_sig = cos(2*pi*central_freq_arr(ind)*t);
         cos_sig = cos_sig.'; % transpose so cos can be multiplied with rectified signal
-        am_sigs(ind,:) = lowpass_filtered_sig .* cos_sig;
+        am_sigs(ind,:) = lowpass_filtered_sig .* cos_sig .* band_gains(ind);
         output_sig = output_sig + am_sigs(ind,:)';
     end
 end
