@@ -13,6 +13,9 @@ desired_Fs = 16000;
 % number of bands
 n = 20;
 
+% gain for each band
+band_gains = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
+
 % start and end frequencies
 f_start = 100;
 f_end = 7999;
@@ -35,8 +38,8 @@ filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
              "Input_mp3/Words reg voice quiet.mp3"];
 num_files = length(filenames);
 
-% file_process_range = 1:4; % change this to change how many files are processed
-file_process_range = 1:num_files; % process all files
+file_process_range = 1:4; % change this to change how many files are processed
+% file_process_range = 1:num_files; % process all files
 
 % -------------------------------------------------------------------------
 
@@ -74,7 +77,7 @@ end
 % -------------------------------------------------------------------------
 % Function Definitions
 % -------------------------------------------------------------------------
-function output_sig = process_audio(filename, boundary_arr, central_freq_arr, desired_Fs)
+function output_sig = process_audio(filename, boundary_arr, central_freq_arr, desired_Fs, band_gains)
     % Read in audio file
     [y, Fs] = audioread(filename);
 
@@ -104,7 +107,7 @@ function output_sig = process_audio(filename, boundary_arr, central_freq_arr, de
         t = (0:n-1) / desired_Fs;
         cos_sig = cos(2*pi*central_freq_arr(ind)*t);
         cos_sig = cos_sig.'; % transpose so cos can be multiplied with rectified signal
-        am_sigs(ind,:) = lowpass_filtered_sig .* cos_sig;
+        am_sigs(ind,:) = lowpass_filtered_sig .* cos_sig .* band_gains(ind);
         output_sig = output_sig + am_sigs(ind,:)';
     end
 end
