@@ -93,7 +93,7 @@ function output_sig = process_audio(filename, boundary_arr, central_freq_arr, de
     for ind = 1:num_bands
         % for every bandpass
         % filter the signal in the band
-        band_filtered_sig = bandpass_butterworth(audio, boundary_arr(ind), boundary_arr(ind+1));
+        band_filtered_sig = bandpass_butterworth(audio, boundary_arr(ind), boundary_arr(ind+1)); % defines filter type
         band_filtered_arr(ind,:) = band_filtered_sig;
         
         % envelope extraction
