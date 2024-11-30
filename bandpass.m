@@ -7,7 +7,7 @@ function sig_out = bandpass(audio_in, f_1, f_2)
     % All frequency values are in Hz.
     Fs = 16000;  % Sampling Frequency
     
-    N   = 4;  % Order
+    N   = 10;  % Order
     Fc1 = f_1;   % First Cutoff Frequency
     Fc2 = f_2;   % Second Cutoff Frequency
     

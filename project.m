@@ -17,7 +17,7 @@ n = 20;
 f_start = 100;
 f_end = 7999;
 
-iteration_str = "1"; % appended to output filenames to help keep track of design version
+iteration_str = "F10"; % appended to output filenames to help keep track of design version
 
 % array of input file names
 filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
@@ -35,8 +35,8 @@ filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
              "Input_mp3/Words reg voice quiet.mp3"];
 num_files = length(filenames);
 
-% file_process_range = 1:4; % change this to change how many files are processed
-file_process_range = 1:num_files; % process all files
+file_process_range = 1:4; % change this to change how many files are processed
+% file_process_range = 1:num_files; % process all files
 
 % -------------------------------------------------------------------------
 
