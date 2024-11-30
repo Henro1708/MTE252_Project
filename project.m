@@ -17,7 +17,7 @@ n = 20;
 f_start = 100;
 f_end = 7999;
 
-iteration_str = "LPW350"; % appended to output filenames to help keep track of design version
+iteration_str = "EQUI"; % appended to output filenames to help keep track of design version
 
 % array of input file names
 filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
@@ -93,7 +93,7 @@ function output_sig = process_audio(filename, boundary_arr, central_freq_arr, de
     for ind = 1:num_bands
         % for every bandpass
         % filter the signal in the band
-        band_filtered_sig = bandpass(audio, boundary_arr(ind), boundary_arr(ind+1));
+        band_filtered_sig = bandpass_butterworth(audio, boundary_arr(ind), boundary_arr(ind+1));
         band_filtered_arr(ind,:) = band_filtered_sig;
         
         % envelope extraction
