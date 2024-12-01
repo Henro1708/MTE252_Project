@@ -1,4 +1,4 @@
-function sig_out = bandpass(audio_in, f_1, f_2)
+function sig_out = bandpass_chebyshev2(audio_in, f_1, f_2)
     % Input: audio_in -> audio input
     %        f_1 -> low frequency pass
     %        f_2 -> high frequency pass
