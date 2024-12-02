@@ -1,4 +1,4 @@
-function sig_out = lowpass_Elliptic
+function sig_out = lowpass_elliptic(audio_in)
     % All frequency values are in Hz.
     Fs = 16000;  % Sampling Frequency
     

@@ -1,4 +1,4 @@
-function sig_out = lowpass(audio_in)
+function sig_out = lowpass_butterworth(audio_in)
     % All frequency values are in Hz.
     Fs = 16000;  % Sampling Frequency
 

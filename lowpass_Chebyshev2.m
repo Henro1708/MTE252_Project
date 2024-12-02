@@ -1,4 +1,4 @@
-function sig_out = lowpass_Chebyshev2
+function sig_out = lowpass_chebyshev2(audio_in)
     % All frequency values are in Hz.
     Fs = 16000;  % Sampling Frequency
     

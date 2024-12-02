@@ -1,4 +1,4 @@
-function sig_out = lowpass_MaxFlat
+function sig_out = lowpass_max_flat(audio_in)
     % All frequency values are in Hz.
     Fs = 16000;  % Sampling Frequency
     
