@@ -17,7 +17,7 @@ n = 20;
 f_start = 100;
 f_end = 7999;
 
-iteration_str = "LOW_CHEB"; % appended to output filenames to help keep track of design version
+iteration_str = "LOW_ELLIP"; % appended to output filenames to help keep track of design version
 
 % array of input file names
 filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
@@ -98,7 +98,7 @@ function output_sig = process_audio(filename, boundary_arr, central_freq_arr, de
         
         % envelope extraction
         abs_sig = abs(band_filtered_sig);
-        lowpass_filtered_sig = lowpass_butterworth(abs_sig);
+        lowpass_filtered_sig = lowpass_elliptic(abs_sig);
 
         % modulate with central frequency
         t = (0:n-1) / desired_Fs;
