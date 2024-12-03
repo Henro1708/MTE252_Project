@@ -98,7 +98,7 @@ function output_sig = process_audio(filename, boundary_arr, central_freq_arr, de
         
         % envelope extraction
         abs_sig = abs(band_filtered_sig);
-        lowpass_filtered_sig = lowpass_elliptic(abs_sig);
+        lowpass_filtered_sig = lowpass_butterworth(abs_sig);
 
         % modulate with central frequency
         t = (0:n-1) / desired_Fs;
