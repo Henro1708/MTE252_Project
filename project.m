@@ -17,7 +17,7 @@ n = 20;
 f_start = 100;
 f_end = 7999;
 
-iteration_str = "LOW_ELLIP"; % appended to output filenames to help keep track of design version
+iteration_str = "BUTTER"; % appended to output filenames to help keep track of design version
 
 % array of input file names
 filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
@@ -35,8 +35,8 @@ filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
              "Input_mp3/Words reg voice quiet.mp3"];
 num_files = length(filenames);
 
-file_process_range = 1:4; % change this to change how many files are processed
-% file_process_range = 1:num_files; % process all files
+% file_process_range = 1:1; % change this to change how many files are processed
+file_process_range = 1:num_files; % process all files
 
 % -------------------------------------------------------------------------
 
@@ -44,11 +44,11 @@ file_process_range = 1:4; % change this to change how many files are processed
 % Main
 % -------------------------------------------------------------------------
 
-% calculate log of bounds
+% calculate log of ending bounds
 log_start = log10(f_start);
 log_end = log10(f_end);
 
-% calculate boundaries in log space with even spacing
+% calculate boundaries with even spacing in log space
 log_boundaries = linspace(log_start, log_end, n+1);
 
 % calculate central frequencies
@@ -62,11 +62,10 @@ end
 boundary_arr = 10 .^ log_boundaries;
 central_freq_arr = 10 .^ log_central_freqs;
 
-% Process files specified in the process range
+% Process files specified by file_process_range
 for index = file_process_range
     signal_out = process_audio(filenames(index), boundary_arr, central_freq_arr, desired_Fs); % call processing function
     save_audio(filenames(index), iteration_str, signal_out, desired_Fs); % save to output folder
-    % soundsc(signal_out, desired_Fs); % play output to speakers
 end
 
 % -------------------------------------------------------------------------
@@ -75,6 +74,16 @@ end
 % Function Definitions
 % -------------------------------------------------------------------------
 function output_sig = process_audio(filename, boundary_arr, central_freq_arr, desired_Fs)
+    % Process signal by resampling, splitting into different frequency
+    % bands, enveloping, and recombining with central frequencies.
+    % Inputs: filename -> full name of file to process
+    %         boundarry_arr -> array with boundary frequency values
+    %                          defining band cutoffs
+    %         central_freq_arr -> array of central frequency value for
+    %                             each band
+    %         desired_Fs -> resampling frequency
+    % Output: output_sig -> processed audio signal
+
     % Read in audio file
     [y, Fs] = audioread(filename);
 
@@ -86,26 +95,26 @@ function output_sig = process_audio(filename, boundary_arr, central_freq_arr, de
     n = length(audio);
   
     % Rectify Signal
-    num_bands = length(boundary_arr)-1;
-    band_filtered_arr = zeros([num_bands,n]);
-    am_sigs = zeros([num_bands, n]);
+    num_bands = length(boundary_arr)-1; % number of bands
     output_sig = zeros([n,1]);
+
+    % loop through each band
     for ind = 1:num_bands
-        % for every bandpass
         % filter the signal in the band
-        band_filtered_sig = bandpass_butterworth(audio, boundary_arr(ind), boundary_arr(ind+1)); % defines filter type
-        band_filtered_arr(ind,:) = band_filtered_sig;
+        band_filtered_sig = bandpass_butterworth(audio, boundary_arr(ind), boundary_arr(ind+1)); % determines bandpass filter type
         
         % envelope extraction
         abs_sig = abs(band_filtered_sig);
-        lowpass_filtered_sig = lowpass_butterworth(abs_sig);
+        lowpass_filtered_sig = lowpass_butterworth(abs_sig); % determines lowpass filter type
 
-        % modulate with central frequency
+        % create cosine signal that will be used modulated
         t = (0:n-1) / desired_Fs;
         cos_sig = cos(2*pi*central_freq_arr(ind)*t);
         cos_sig = cos_sig.'; % transpose so cos can be multiplied with rectified signal
-        am_sigs(ind,:) = lowpass_filtered_sig .* cos_sig;
-        output_sig = output_sig + am_sigs(ind,:)';
+
+        % modulate with central frequency
+        am_sig = lowpass_filtered_sig .* cos_sig;
+        output_sig = output_sig + am_sig;
     end
 end
 
