@@ -17,7 +17,7 @@ n = 20;
 f_start = 100;
 f_end = 7999;
 
-iteration_str = "BUTTER"; % appended to output filenames to help keep track of design version
+iteration_str = "1"; % appended to output filenames to help keep track of design version
 
 % array of input file names
 filenames = ["Input_mp3/Conversation regular voice street.mp3", ...
